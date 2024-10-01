@@ -96,8 +96,8 @@ Application Application_construct() {
     app.playState        = FirstQuestion;
     app.settings.width   = DEFAULT_DIM;
     app.settings.height  = DEFAULT_DIM;
-    app.players[0].color = Red;
-    app.players[1].color = Blue;
+    app.players[0].color = GRAPHICS_COLOR_RED;
+    app.players[1].color = GRAPHICS_COLOR_BLUE;
     app.numTurn          = 0;
     app.numPlayer        = 0;
 
@@ -202,13 +202,19 @@ void Application_handleSettingsScreen(Application* app_p, HAL* hal_p) {
 
 void Application_handleGameScreen(Application* app_p, HAL* hal_p) {
 
+    // Play Game Until All Turns Done
     if      (app_p->numTurn < app_p->settings.maxTurns) Application_updateGameScreen(app_p, hal_p);
+
+    // Send End Game Instructions to View Results
     else if (app_p->numTurn++ == app_p->settings.maxTurns) {
         char instr[] = "Press BB1 to end the game";
         UART_sendString(&hal_p->uart, instr);
     }
+
+    // Display Results Screen
     else if (Button_isTapped(&hal_p->boosterpackS1)) {
         app_p->state = ResultsScreen;
+        Application_showResultsScreen(app_p, &hal_p->gfx);
     }
 
 }
@@ -219,7 +225,7 @@ void Application_showTitleScreen(GFX* gfx_p) {
 
     GFX_print(gfx_p, "Dots and Boxes", 2, 1);
 
-    GFX_print(gfx_p, "Victoria Chin", 5, 1);
+    GFX_print(gfx_p, "NAME", 5, 1);
 
     GFX_print(gfx_p, "LB1: Play Game",    7, 1);
     GFX_print(gfx_p, "LB2: Instructions", 8, 1);
@@ -230,6 +236,24 @@ void Application_showInstructionsScreen(GFX* gfx_p) {
 
     GFX_clear(gfx_p);
 
+    GFX_print(gfx_p, "Instructions Screen", 2, 1);
+
+    char* instr[] = { "Select the dimensions",
+                      "for the board. Each",
+                      "player connects the",
+                      "adjacent dots with",
+                      "lines by entering",
+                      "coordinates to make",
+                      "a box. A player goes",
+                      "again if they make a",
+                      "box. Results are shown",
+                      "when last line is",
+                      "drawn."};
+
+    int length = (int)(sizeof(instr) / sizeof(instr[0]));
+    GFX_printTextRows(gfx_p, instr, length, 3.5, 0);
+
+    GFX_print(gfx_p, "LB2: Go Back", 15, 1);
 
 }
 
@@ -285,6 +309,29 @@ void Application_showGameScreen(Application* app_p, GFX* gfx_p) {
     }
 
     GFX_print(gfx_p, "Game Screen", 15, 5.5);
+
+}
+
+void Application_showResultsScreen(Application* app_p, GFX* gfx_p) {
+
+    GFX_clear(gfx_p);
+
+    char results[13], winner[] = "Winner: Player  #";
+
+    GFX_print(gfx_p, "Results Screen", 1, 3.5);
+
+    sprintf(results, "Player %i: %i", 1, app_p->players[0].boxesWon);
+    GFX_print(gfx_p, results, 3, 1);
+
+    sprintf(results, "Player %i: %i", 2, app_p->players[1].boxesWon);
+    GFX_print(gfx_p, results, 4, 1);
+
+    if (app_p->players[0].boxesWon == app_p->players[1].boxesWon) GFX_print(gfx_p, "TIE", 6, 1);
+    else {
+        char player = (app_p->players[0].boxesWon > app_p->players[1].boxesWon) ? '1' : '2';
+        winner[16] = player;
+        GFX_print(gfx_p, winner, 6, 1);
+    }
 
 }
 
@@ -344,7 +391,19 @@ void Application_updateSettings(Application* app_p, GFX* gfx_p) {
         app_p->settings.maxTurns = app_p->settings.width  * (app_p->settings.height - 1) +
                                    app_p->settings.height * (app_p->settings.width - 1);
         app_p->boxes.boxesToWin  = (app_p->settings.width - 1) * (app_p->settings.height - 1);
-        int i; for (i = 0; i < app_p->settings.maxTurns; i++) app_p->boxes.linesDrawn[i] = 0;
+
+        int i, j = 1;
+        
+        for (i = 0; i < app_p->settings.maxTurns; i++) app_p->boxes.linesDrawn[i] = 0;
+
+        int topLine = 0;
+        for (i = 0; i < app_p->settings.height - 1; i++) {
+            for (j = 0; j < app_p->settings.width - 1; j++) {
+                app_p->boxes.boxesCompleted[i * (app_p->settings.width - 1) + j][TOP_LINE] = topLine++;
+                app_p->boxes.boxesCompleted[i * (app_p->settings.width - 1) + j][BOX_COMPLETED] = 0;
+            }
+            topLine += app_p->settings.width;
+        }
         Application_showGameScreen(app_p, gfx_p);
 
         break;
@@ -377,10 +436,10 @@ void Application_sendFirstQuestion(Application* app_p, UART* uart_p) {
 
     char player[] = "Player #";
     char instr[] = ", please enter a number from 0-# for X and 0-# for Y with any of the following formats:\n\
-                    \rXYU\n\
-                    \rXYD\n\
-                    \rXYL\n\
-                    \rXYR\n\
+                    \rXYU (U - Line UP)\n\
+                    \rXYD (D - Line DOWN)\n\
+                    \rXYL (L - Line LEFT)\n\
+                    \rXYR (R - Line RIGHT)\n\
                     \rX1XY1X2Y2\n\
                     \rPress enter to submit your move: ";
 
@@ -396,10 +455,10 @@ void Application_sendFirstQuestion(Application* app_p, UART* uart_p) {
 void Application_sendInvalidCoordinates(Application* app_p, UART* uart_p) {
 
     char instr[] = "Please enter a number from 0-# for X and 0-# for Y with any of the following formats:\n\
-                    \rXYU\n\
-                    \rXYD\n\
-                    \rXYL\n\
-                    \rXYR\n\
+                    \rXYU (U - Line UP)\n\
+                    \rXYD (D - Line DOWN)\n\
+                    \rXYL (L - Line LEFT)\n\
+                    \rXYR (R - Line RIGHT)\n\
                     \rX1XY1X2Y2\n\
                     \rPress enter to submit your move: ";
     instr[29] = app_p->settings.width - 1 + '0';
@@ -421,10 +480,13 @@ void Application_receiveCoordinates(Application* app_p, HAL* hal_p) {
             (i > 1 && (toupper(app_p->rxChar) == 'U' || toupper(app_p->rxChar) == 'D' || toupper(app_p->rxChar) == 'L' || toupper(app_p->rxChar) == 'R'))) {
             if ((app_p->rxChar >= 'a' && app_p->rxChar <= 'z') || (app_p->rxChar >= 'A' && app_p->rxChar <= 'Z')) {
                 app_p->boxes.coordinates[i] = toupper(app_p->rxChar);
+                UART_sendChar(&hal_p->uart, app_p->boxes.coordinates[i]);
                 if (i == COORDINATES_LEN - 1 - 1) i = COORDINATES_LEN;
             }
-            else app_p->boxes.coordinates[i] = app_p->rxChar;
-            UART_sendChar(&hal_p->uart, app_p->boxes.coordinates[i++]);
+            else {
+                app_p->boxes.coordinates[i] = app_p->rxChar;
+                UART_sendChar(&hal_p->uart, app_p->boxes.coordinates[i++]);
+            }
         }
 
     }
@@ -494,8 +556,10 @@ void Application_interpretCoordinates(Application* app_p, HAL* hal_p) {
 
         GFX_setForeground(&hal_p->gfx, FG_COLOR);
 
+        Application_checkBoxWon(app_p);
+
+        app_p->numTurn++;
         app_p->playState = FirstQuestion;
-        app_p->numPlayer = CircularIncrement(app_p->numPlayer, 1);
 
     }
 
@@ -509,16 +573,16 @@ bool Application_checkCoordinate(Application* app_p, GFX* gfx_p) {
 
     switch (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1]) {
     case 'U':
-        side = ((app_p->settings.height - '0') * 2 - 1) * (app_p->boxes.coordinates[X1] - '0') + (app_p->boxes.coordinates[Y1] - '0') + ((app_p->settings.height - '0') - 1);    // (Height * 2 - 1) * X + Y + (Height - 1)
+        side = (app_p->settings.height * 2 - 1) * ((int)(app_p->boxes.coordinates[X1] - '0') - 1) + (int)(app_p->boxes.coordinates[Y1] - '0') + (app_p->settings.width - 1);    // (Height * 2 - 1) * X + Y + (Width - 1)
         break;
     case 'D':
-        side = ((app_p->settings.height - '0') * 2 - 1) * (app_p->boxes.coordinates[X1] - '0' + 1) + (app_p->boxes.coordinates[Y1] - '0') + ((app_p->settings.height - '0') - 1);
+        side = (app_p->settings.height * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + (int)(app_p->boxes.coordinates[Y1] - '0') + (app_p->settings.width - 1); // (Height * 2 - 1) X +
         break;
     case 'L':
-        side = ((app_p->settings.height - '0') * 2 - 1) * (app_p->boxes.coordinates[X1] - '0') + (app_p->boxes.coordinates[Y1] - '0' - 1);   // (Height * 2 - 1) * X + (Y-1)
+        side = (app_p->settings.height * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + ((int)(app_p->boxes.coordinates[Y1] - '0') - 1);   // (Height * 2 - 1) * X + (Y-1)
         break;
     case 'R':
-        side = ((app_p->settings.height - '0') * 2 - 1) * (app_p->boxes.coordinates[X1] - '0') + (app_p->boxes.coordinates[Y1] - '0');    // (Height * 2 - 1) * X + Y
+        side = (app_p->settings.height * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + (int)(app_p->boxes.coordinates[Y1] - '0');    // (Height * 2 - 1) * X + Y
         break;
     default: break;
     }
@@ -528,6 +592,32 @@ bool Application_checkCoordinate(Application* app_p, GFX* gfx_p) {
     app_p->boxes.linesDrawn[side] = 1;
 
     return valid;
+
+}
+
+void Application_checkBoxWon(Application* app_p) {
+
+    int winCount = 0;
+    int spacing = app_p->settings.width - 1;
+
+    int i; for (i = 0; i < app_p->boxes.boxesToWin; i++) {
+        //
+
+        int topLine = app_p->boxes.boxesCompleted[i][TOP_LINE];
+
+        if (app_p->boxes.boxesCompleted[i][BOX_COMPLETED]) ;                // Don't Bother to Check a Completed Box
+        else if (app_p->boxes.linesDrawn[topLine] != 1) ;
+        else if (app_p->boxes.linesDrawn[topLine + spacing] != 1) ;
+        else if (app_p->boxes.linesDrawn[topLine + spacing + 1] != 1) ;
+        else if (app_p->boxes.linesDrawn[topLine + spacing + 1 + spacing] != 1);
+        else {
+            winCount++;
+            app_p->boxes.boxesCompleted[i][BOX_COMPLETED] = 1;
+        }
+    }
+
+    if (winCount == 0) app_p->numPlayer = RangedCircularIncrement(app_p->numPlayer, 0, 1);   // Change Turns if No Player Wins
+    else app_p->players[app_p->numPlayer].boxesWon += winCount;
 
 }
 

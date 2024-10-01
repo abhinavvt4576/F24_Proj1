@@ -24,6 +24,9 @@
 #define X2 2
 #define Y2 3
 
+#define TOP_LINE      0
+#define BOX_COMPLETED 1
+
 #define SIDES 4
 
 #define MAX_PLAYERS 2
@@ -39,22 +42,19 @@ typedef enum { Cursor_0, Cursor_1, Cursor_2, NUM_CURSOR_CHOICES } _appCursorFSMs
 
 typedef enum { FirstQuestion, ReceiveInput, RoundOver } _appPlayFSMstate;
 
-enum _appPlayerColors { Red = GRAPHICS_COLOR_RED, Blue = GRAPHICS_COLOR_BLUE };
-typedef enum _appPlayerColors appPlayerColors;
-
 enum _appInvalidCoordinates { SameCoordinate, ExistingLine };
 typedef enum _appInvalidCoordinates appInvalidCoordinates;
 
 struct _Player {
     int boxesWon;
-    appPlayerColors color;
+    uint32_t color;
 };
 typedef struct _Player Player;
 
 struct _Box {
     char coordinates[COORDINATES_LEN + 1];
     int boxesToWin;
-    int boxes[MAX_BOXES][2];  // Record of Made Boxes (First Side, If Box is Complete)
+    int boxesCompleted[MAX_BOXES][2];  // Record of Made Boxes (First Side, If Box is Complete)
     int linesDrawn[MAX_TURNS];  // Record of Existing Lines
 };
 typedef struct _Box Box;
@@ -113,6 +113,7 @@ void Application_sendInvalidCoordinates(Application* app_p, UART* uart_p);
 void Application_receiveCoordinates(Application* app_p, HAL* hal_p);
 void Application_interpretCoordinates(Application* app_p, HAL* hal_p);
 bool Application_checkCoordinate(Application* app_p, GFX* gfx_p);
+void Application_checkBoxWon(Application* app_p);
 
 // Called whenever the UART module needs to be updated
 void Application_updateCommunications(Application* app, HAL* hal);

@@ -156,8 +156,11 @@ void Application_loop(Application* app_p, HAL* hal_p) {
 
 /**
 * Callback function for when the game is in the TITLE_SCREEN state.
+* While on this screen, tapping LB1 will display the Settings Screen and
+* tappig LB2 will display the Instructions Screen.
 *
 * @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
 */
 void Application_handleTitleScreen(Application* app_p, HAL* hal_p) {
     
@@ -175,6 +178,13 @@ void Application_handleTitleScreen(Application* app_p, HAL* hal_p) {
 
 }
 
+/**
+* Callback function for when the game is in the INSTRUCTIONS_SCREEN state.
+* While on this screen, tapping LB2 will go back to display the Title Screen.
+*
+* @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
+*/
 void Application_handleInstructionsScreen(Application* app_p, HAL* hal_p) {
 
     // Display the Title Screen if LB2 Tapped
@@ -185,6 +195,14 @@ void Application_handleInstructionsScreen(Application* app_p, HAL* hal_p) {
 
 }
 
+/**
+* Callback function for when the game is in the SETTINGS_SCREEN state.
+* While on this screen, tapping JSB will circularly move the cursor from
+* the Width setting, Height setting, and PLAY button.
+*
+* @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
+*/
 void Application_handleSettingsScreen(Application* app_p, HAL* hal_p) {
 
     // Update Cursor Position if JSB Tapped
@@ -200,6 +218,15 @@ void Application_handleSettingsScreen(Application* app_p, HAL* hal_p) {
 
 }
 
+/**
+* Callback function for when the game is in the GAME_SCREEN state.
+* While on this screen, the players will be asked to enter coordinates from which to
+* draw lines from. When the turns are done, the game is over and the player will
+* be asked to tap BB1 to display the Results Screen,
+*
+* @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
+*/
 void Application_handleGameScreen(Application* app_p, HAL* hal_p) {
 
     // Play Game Until All Turns Done
@@ -219,6 +246,11 @@ void Application_handleGameScreen(Application* app_p, HAL* hal_p) {
 
 }
 
+/**
+* A helper function which clears the screen and prints the title screen.
+*
+* @param gfx_p: A pointer to the GFX object within the main HAL object.
+*/
 void Application_showTitleScreen(GFX* gfx_p) {
 
     GFX_clear(gfx_p);
@@ -232,6 +264,12 @@ void Application_showTitleScreen(GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which clears the screen and prints the instructions for
+* how to play the game.
+*
+* @param gfx_p: A pointer to the GFX object within the main HAL object.
+*/
 void Application_showInstructionsScreen(GFX* gfx_p) {
 
     GFX_clear(gfx_p);
@@ -258,7 +296,8 @@ void Application_showInstructionsScreen(GFX* gfx_p) {
 }
 
 /**
-* A helper function which clears the screen.
+* A helper function which clears the screen and prints the default display
+* of the Settings Screen.
 *
 * @param app_p: A pointer to the main Application object.
 * @param gfx_p: A pointer to the main GFX object.
@@ -295,6 +334,13 @@ void Application_showSettingsScreen(Application* app_p, GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which clears the screen and prints a blank dots and boxes
+* board based on the player's set dimensions.
+*
+* @param app_p: A pointer to the main Application object.
+* @param gfx_p: A pointer to the GFX object within the main HAL object.
+*/
 void Application_showGameScreen(Application* app_p, GFX* gfx_p) {
 
     GFX_clear(gfx_p);
@@ -312,6 +358,13 @@ void Application_showGameScreen(Application* app_p, GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which clears the screen and prints the results of the game.
+*
+* @param app_p: A pointer to the main Application object.
+* @param gfx_p: A pointer to the GFX object within the main HAL object.
+*/
+void
 void Application_showResultsScreen(Application* app_p, GFX* gfx_p) {
 
     GFX_clear(gfx_p);
@@ -335,6 +388,13 @@ void Application_showResultsScreen(Application* app_p, GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which updates the main Settings Screen by redrawing only the positions
+* where the cursor could possibly be updated.
+*
+* @param app_p: A pointer to the main Application object.
+* @param gfx_p: A pointer to the GFX object within the main HAL object.
+*/
 void Application_updateCursor(Application* app_p, GFX* gfx_p) {
 
     char* asterick = "*";
@@ -365,6 +425,14 @@ void Application_updateCursor(Application* app_p, GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which updates the main Settings Screen by redrawing only the positions
+* where the Width and Height settings could possibly be updated. Also, switches to the game screen
+* if the cursor is next to the PLAY button.
+*
+* @param app_p: A pointer to the main Application object.
+* @param gfx_p: A pointer to the GFX object within the main HAL object.
+*/
 void Application_updateSettings(Application* app_p, GFX* gfx_p) {
 
     char setting[] = "0";
@@ -414,6 +482,13 @@ void Application_updateSettings(Application* app_p, GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which updates the main Game Screen by calling other helper functions to
+* receive and interpret the player's inputs and redraw the screen only where a line is to be drawn.
+*
+* @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
+*/
 void Application_updateGameScreen(Application* app_p, HAL* hal_p) {
 
     switch (app_p->playState) {
@@ -432,6 +507,12 @@ void Application_updateGameScreen(Application* app_p, HAL* hal_p) {
 
 }
 
+/**
+* A helper function which sends the instructions to the serial terminal.
+*
+* @param app_p: A pointer to the main Application object.
+* @param uart_p: A pointer to the UART object within the main HAL object.
+*/
 void Application_sendFirstQuestion(Application* app_p, UART* uart_p) {
 
     char player[] = "Player #";
@@ -452,6 +533,13 @@ void Application_sendFirstQuestion(Application* app_p, UART* uart_p) {
 
 }
 
+/**
+* A helper function which sends the instructions if the player failed to input valid
+* coordinates to the serial terminal.
+*
+* @param app_p: A pointer to the main Application object.
+* @param uart_p: A pointer to the UART object within the main HAL object.
+*/
 void Application_sendInvalidCoordinates(Application* app_p, UART* uart_p) {
 
     char instr[] = "Please enter a number from 0-# for X and 0-# for Y with any of the following formats:\n\
@@ -467,6 +555,12 @@ void Application_sendInvalidCoordinates(Application* app_p, UART* uart_p) {
 
 }
 
+/**
+* A helper function which interprets if the play entered a valid input.
+*
+* @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
+*/
 void Application_receiveCoordinates(Application* app_p, HAL* hal_p) {
 
     static int i = 0;
@@ -474,9 +568,11 @@ void Application_receiveCoordinates(Application* app_p, HAL* hal_p) {
     // Accept the Valid Number of Characters
     if (i < COORDINATES_LEN) {
 
+        // Check the Max Dimension that should be Accepted
         int maxDim = (app_p->settings.width > app_p->settings.height) ? app_p->settings.width : app_p->settings.height;
 
-        if ((app_p->rxChar >= '0' && app_p->rxChar <= maxDim + '0') ||
+        // Only Accept Numbers within the dimensions of the board
+        if ((app_p->rxChar >= '0' && app_p->rxChar < maxDim + '0') ||
             (i > 1 && (toupper(app_p->rxChar) == 'U' || toupper(app_p->rxChar) == 'D' || toupper(app_p->rxChar) == 'L' || toupper(app_p->rxChar) == 'R'))) {
             if ((app_p->rxChar >= 'a' && app_p->rxChar <= 'z') || (app_p->rxChar >= 'A' && app_p->rxChar <= 'Z')) {
                 app_p->boxes.coordinates[i] = toupper(app_p->rxChar);
@@ -492,7 +588,7 @@ void Application_receiveCoordinates(Application* app_p, HAL* hal_p) {
     }
 
 
-
+    // when the input has been entered, interpret the coordinates
     if (i >= COORDINATES_LEN) {
 
         UART_sendChar(&hal_p->uart, '\n');
@@ -506,87 +602,125 @@ void Application_receiveCoordinates(Application* app_p, HAL* hal_p) {
 
     }
 
-
     app_p->rxChar = 1;
 
 }
 
+/**
+* A helper function which interprets if the play entered a valid coordinate and draw the line if it is.
+*
+* @param app_p: A pointer to the main Application object.
+* @param hal_p: A pointer to the main HAL object.
+*/
 void Application_interpretCoordinates(Application* app_p, HAL* hal_p) {
 
     bool valid = true;
 
+    // checking the validity of the x1y1x2y2 format
     if (strlen(app_p->boxes.coordinates) == COORDINATES_FORMAT_N) {
+        // check if the coordinate is within the dimensions of the board
+        if      ((int)(app_p->boxes.coordinates[X1] - '0') >= app_p->settings.height ||
+                 (int)(app_p->boxes.coordinates[X2] - '0') >= app_p->settings.height ) valid = false;
 
-        if      (abs((app_p->boxes.coordinates[X1] - '0') - (app_p->boxes.coordinates[X2] - '0')) > 1 ||
+        else if ((int)(app_p->boxes.coordinates[Y1] - '0') >= app_p->settings.width ||
+                 (int)(app_p->boxes.coordinates[Y2] - '0') >= app_p->settings.width )  valid = false;
+
+        // check if the coordinates are adjacent
+        else if (abs((app_p->boxes.coordinates[X1] - '0') - (app_p->boxes.coordinates[X2] - '0')) > 1 ||
                  abs((app_p->boxes.coordinates[Y1] - '0') - (app_p->boxes.coordinates[Y2] - '0') > 1)) valid = false;
+
         else if (abs((app_p->boxes.coordinates[X1] - '0') - (app_p->boxes.coordinates[X2] - '0')) >= 1 &&
                  abs((app_p->boxes.coordinates[Y1] - '0') - (app_p->boxes.coordinates[Y2] - '0') >= 1)) valid = false;
+
+        // determine if the motion of the line is up, down, left, or right
         else if ((app_p->boxes.coordinates[X1] - '0') - (app_p->boxes.coordinates[X2] - '0') > 0) app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] = 'U';
         else if ((app_p->boxes.coordinates[X1] - '0') - (app_p->boxes.coordinates[X2] - '0') < 0) app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] = 'D';
         else if ((app_p->boxes.coordinates[Y1] - '0') - (app_p->boxes.coordinates[Y2] - '0') > 0) app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] = 'L';
         else if ((app_p->boxes.coordinates[Y1] - '0') - (app_p->boxes.coordinates[Y2] - '0') < 0) app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] = 'R';
+
         else valid = false;
+
     }
-    
 
-
+    // checking the validity of the xy[direction] format
     if (valid) {
-        if      (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'U' && app_p->boxes.coordinates[0] == '0')                              valid = false;
+        // check if the coordinate is within the dimensions of the board
+        if      ((int)(app_p->boxes.coordinates[X1] - '0') >= app_p->settings.height ||
+                 (int)(app_p->boxes.coordinates[Y1] - '0') >= app_p->settings.width)                                                           valid = false;
+        // determine if the motion of the line is up, down, left, or right
+        else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'U' && app_p->boxes.coordinates[0] == '0')                              valid = false;
         else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'D' && app_p->boxes.coordinates[0] == app_p->settings.height - 1 + '0') valid = false;
         else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'L' && app_p->boxes.coordinates[1] == '0')                              valid = false;
         else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'R' && app_p->boxes.coordinates[1] == app_p->settings.width - 1 + '0')  valid = false;
-    }
-
-    if (valid && Application_checkCoordinate(app_p, &hal_p->gfx)){
-
-        GFX_setForeground(&hal_p->gfx, app_p->players[app_p->numPlayer].color);
-
-        int spaceWidth = 128 / app_p->settings.width - 1;
-        int spaceHeight = 128 / app_p->settings.height - 1;
-        float x = app_p->boxes.coordinates[X1] - '0' + 0.5;
-        float y = app_p->boxes.coordinates[Y1] - '0' + 0.5;
-
-        if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'U')
-            GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * y, 2.5 + spaceHeight * x, 2.5 + spaceHeight * (x - 1));
-        else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'D')
-            GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * y, 2.5 + spaceHeight * x, 2.5 + spaceHeight * (x + 1));
-        else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'L')
-            GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * (y - 1), 2.5 + spaceHeight * x, 2.5 + spaceHeight * x);
-        else GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * (y + 1), 2.5 + spaceHeight * x, 2.5 + spaceHeight * x);
-
-        GFX_setForeground(&hal_p->gfx, FG_COLOR);
-
-        Application_checkBoxWon(app_p);
-
-        app_p->numTurn++;
-        app_p->playState = FirstQuestion;
 
     }
 
-    else Application_sendInvalidCoordinates(app_p, &hal_p->uart);
+    // if the coordinate is valid, check if the direction is valid
+    if (valid) {
+
+        // if the direction of the line drawing is valid, draw the line and check if someone won a box
+        if (Application_checkCoordinate(app_p, &hal_p->gfx)) {
+
+            GFX_setForeground(&hal_p->gfx, app_p->players[app_p->numPlayer].color);
+
+            int spaceWidth = 128 / app_p->settings.width - 1;
+            int spaceHeight = 128 / app_p->settings.height - 1;
+            float x = app_p->boxes.coordinates[X1] - '0' + 0.5;
+            float y = app_p->boxes.coordinates[Y1] - '0' + 0.5;
+
+            if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'U')
+                GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * y, 2.5 + spaceHeight * x, 2.5 + spaceHeight * (x - 1));
+            else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'D')
+                GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * y, 2.5 + spaceHeight * x, 2.5 + spaceHeight * (x + 1));
+            else if (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1] == 'L')
+                GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * (y - 1), 2.5 + spaceHeight * x, 2.5 + spaceHeight * x);
+            else GFX_drawLine(&hal_p->gfx, 2.5 + spaceWidth * y, 2.5 + spaceWidth * (y + 1), 2.5 + spaceHeight * x, 2.5 + spaceHeight * x);
+
+            GFX_setForeground(&hal_p->gfx, FG_COLOR);
+
+            // check if drawing that line won a player a box
+            Application_checkBoxWon(app_p);
+
+            app_p->numTurn++;
+            app_p->playState = FirstQuestion;
+
+        }
+
+    }
+
+    // ask the player to enter a valid input if they didn't
+    if (!valid) Application_sendInvalidCoordinates(app_p, &hal_p->uart);
 
 }
 
+/**
+* A helper function which checks if the player is trying to draw a line that is already on
+* the board.
+*
+* @param app_p: A pointer to the main Application object.
+* @param gfx_p: irrelevant, need to take it out
+*/
 bool Application_checkCoordinate(Application* app_p, GFX* gfx_p) {
 
     int side;
 
     switch (app_p->boxes.coordinates[COORDINATES_FORMAT_L - 1]) {
     case 'U':
-        side = (app_p->settings.height * 2 - 1) * ((int)(app_p->boxes.coordinates[X1] - '0') - 1) + (int)(app_p->boxes.coordinates[Y1] - '0') + (app_p->settings.width - 1);    // (Height * 2 - 1) * X + Y + (Width - 1)
+        side = (app_p->settings.width * 2 - 1) * ((int)(app_p->boxes.coordinates[X1] - '0') - 1) + (int)(app_p->boxes.coordinates[Y1] - '0') + (app_p->settings.width - 1);    //
         break;
     case 'D':
-        side = (app_p->settings.height * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + (int)(app_p->boxes.coordinates[Y1] - '0') + (app_p->settings.width - 1); // (Height * 2 - 1) X +
+        side = (app_p->settings.width * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + (int)(app_p->boxes.coordinates[Y1] - '0') + (app_p->settings.width - 1); // col + (width - 1) + ((width - 1) + width) * row
         break;
     case 'L':
-        side = (app_p->settings.height * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + ((int)(app_p->boxes.coordinates[Y1] - '0') - 1);   // (Height * 2 - 1) * X + (Y-1)
+        side = (app_p->settings.width * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + ((int)(app_p->boxes.coordinates[Y1] - '0') - 1);   // (Height * 2 - 1) * X + (Y-1)
         break;
     case 'R':
-        side = (app_p->settings.height * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + (int)(app_p->boxes.coordinates[Y1] - '0');    // (Height * 2 - 1) * X + Y
+        side = (app_p->settings.width * 2 - 1) * (int)(app_p->boxes.coordinates[X1] - '0') + (int)(app_p->boxes.coordinates[Y1] - '0');    // (Height * 2 - 1) * X + Y
         break;
     default: break;
     }
 
+    // check if the line was already drawn
     bool valid = (app_p->boxes.linesDrawn[side] == 1) ? false : true;
 
     app_p->boxes.linesDrawn[side] = 1;
@@ -595,6 +729,11 @@ bool Application_checkCoordinate(Application* app_p, GFX* gfx_p) {
 
 }
 
+/**
+* A helper function which interprets if the player completed any boxes.
+*
+* @param app_p: A pointer to the main Application object.
+*/
 void Application_checkBoxWon(Application* app_p) {
 
     int winCount = 0;
